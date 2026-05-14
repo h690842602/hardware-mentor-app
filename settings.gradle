@@ -1,2 +1,2 @@
-# Include app module
+// Include app module
 include ':app'
