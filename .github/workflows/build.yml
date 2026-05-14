@@ -29,21 +29,21 @@ jobs:
         echo "=== Before fix ==="
         cat app/src/main/AndroidManifest.xml
         
-        # 1. 修复 AndroidManifest.xml - 使用系统默认资源
-        sed -i 's|android:icon="@mipmap/ic_launcher"|android:icon="@android:drawable/ic_menu_info_details"|g' app/src/main/AndroidManifest.xml
-        sed -i 's|android:theme="@style/AppTheme"|android:theme="@android:style/Theme.Light.NoActionBar"|g' app/src/main/AndroidManifest.xml
+        # 1. 修复 AndroidManifest.xml
+        sed -i 's|android:theme="[^"]*"|android:theme="@style/AppTheme"|g' app/src/main/AndroidManifest.xml
+        sed -i 's|android:icon="@mipmap/ic_launcher"|android:icon="@drawable/ic_launcher"|g' app/src/main/AndroidManifest.xml
         
-        # 2. 创建 styles.xml（定义 AppTheme，防止其他地方引用）
+        # 2. 创建 styles.xml（parent 用 android:Theme，最基本、一定存在）
         mkdir -p app/src/main/res/values
         cat > app/src/main/res/values/styles.xml << 'EOF'
         <?xml version="1.0" encoding="utf-8"?>
         <resources>
-            <style name="AppTheme" parent="android:style/Theme.Light.NoActionBar">
+            <style name="AppTheme" parent="android:Theme">
             </style>
         </resources>
         EOF
         
-        # 3. 创建占位图标
+        # 3. 创建占位图标（修复了 pathData 的 = 号）
         mkdir -p app/src/main/res/drawable
         cat > app/src/main/res/drawable/ic_launcher.xml << 'EOF'
         <?xml version="1.0" encoding="utf-8"?>
