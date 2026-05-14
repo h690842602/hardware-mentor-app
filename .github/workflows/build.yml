@@ -1,5 +1,3 @@
-# GitHub Actions 自动编译 Android APK
-
 name: Build Android APK
 
 on:
@@ -35,4 +33,5 @@ jobs:
         name: hardware-mentor-apk
         path: app/build/outputs/apk/debug/*.apk
         retention-days: 30
+
 
