@@ -24,42 +24,119 @@ jobs:
       with:
         gradle-version: 7.5
     
-    - name: Fix missing Android resources
+    - name: Fix Android project files
       run: |
-        echo "=== Before fix ==="
-        cat app/src/main/AndroidManifest.xml
+        echo "=== 开始一次性修复所有问题 ==="
         
+        # ============================================
         # 1. 修复 AndroidManifest.xml
+        # ============================================
+        # 替换 theme 为本地定义的 AppTheme
         sed -i 's|android:theme="[^"]*"|android:theme="@style/AppTheme"|g' app/src/main/AndroidManifest.xml
+        # 替换 mipmap 图标为 drawable 图标
         sed -i 's|android:icon="@mipmap/ic_launcher"|android:icon="@drawable/ic_launcher"|g' app/src/main/AndroidManifest.xml
+        echo "[OK] AndroidManifest.xml 已修复"
         
-        # 2. 创建 styles.xml（parent 用 android:Theme，最基本、一定存在）
+        # ============================================
+        # 2. 创建 styles.xml（使用原生 android:Theme，不依赖 AppCompat）
+        # ============================================
         mkdir -p app/src/main/res/values
         cat > app/src/main/res/values/styles.xml << 'EOF'
-        <?xml version="1.0" encoding="utf-8"?>
-        <resources>
-            <style name="AppTheme" parent="android:Theme">
-            </style>
-        </resources>
-        EOF
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="AppTheme" parent="android:Theme">
+    </style>
+</resources>
+EOF
+        echo "[OK] styles.xml 已创建"
         
-        # 3. 创建占位图标（修复了 pathData 的 = 号）
+        # ============================================
+        # 3. 创建应用图标（drawable 矢量图标）
+        # ============================================
         mkdir -p app/src/main/res/drawable
         cat > app/src/main/res/drawable/ic_launcher.xml << 'EOF'
-        <?xml version="1.0" encoding="utf-8"?>
-        <vector xmlns:android="http://schemas.android.com/apk/res/android"
-            android:width="48dp"
-            android:height="48dp"
-            android:viewportWidth="24"
-            android:viewportHeight="24">
-            <path
-                android:fillColor="#1976D2"
-                android:pathData="M12,2C6.48,2 2,6.48 2,12s4.48,10 10,10 10,-4.48 10,-10S17.52,2 12,2zM13,17h-2v-6h2v6zM13,9h-2V7h2v2z"/>
-        </vector>
-        EOF
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="48dp"
+    android:height="48dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:fillColor="#1976D2"
+        android:pathData="M12,2C6.48,2 2,6.48 2,12s4.48,10 10,10 10,-4.48 10,-10S17.52,2 12,2zM13,17h-2v-6h2v6zM13,9h-2V7h2v2z"/>
+</vector>
+EOF
+        echo "[OK] ic_launcher.xml 已创建"
         
-        echo "=== After fix ==="
+        # ============================================
+        # 4. 创建布局文件 activity_main.xml
+        # ============================================
+        mkdir -p app/src/main/res/layout
+        cat > app/src/main/res/layout/activity_main.xml << 'EOF'
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+    <WebView
+        android:id="@+id/webview"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+</FrameLayout>
+EOF
+        echo "[OK] activity_main.xml 已创建"
+        
+        # ============================================
+        # 5. 重写 MainActivity.java（核心修复）
+        #    改用原生 android.app.Activity，彻底摆脱 AppCompat 依赖
+        # ============================================
+        mkdir -p app/src/main/java/com/hardware/mentor
+        cat > app/src/main/java/com/hardware/mentor/MainActivity.java << 'EOF'
+package com.hardware.mentor;
+
+import android.app.Activity;
+import android.os.Bundle;
+import android.webkit.WebSettings;
+import android.webkit.WebView;
+import android.webkit.WebViewClient;
+
+public class MainActivity extends Activity {
+    private WebView webView;
+    
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+        
+        webView = (WebView) findViewById(R.id.webview);
+        WebSettings webSettings = webView.getSettings();
+        webSettings.setJavaScriptEnabled(true);
+        webSettings.setDomStorageEnabled(true);
+        webSettings.setAllowFileAccess(true);
+        webSettings.setAllowContentAccess(true);
+        
+        webView.setWebViewClient(new WebViewClient());
+        webView.loadUrl("file:///android_asset/hardware-mentor-complete.html");
+    }
+    
+    @Override
+    public void onBackPressed() {
+        if (webView.canGoBack()) {
+            webView.goBack();
+        } else {
+            super.onBackPressed();
+        }
+    }
+}
+EOF
+        echo "[OK] MainActivity.java 已重写（使用原生 Activity）"
+        
+        echo ""
+        echo "=== 修复完成，最终文件内容 ==="
+        echo "--- AndroidManifest.xml ---"
         cat app/src/main/AndroidManifest.xml
+        echo ""
+        echo "--- MainActivity.java ---"
+        cat app/src/main/java/com/hardware/mentor/MainActivity.java
     
     - name: Clean build
       run: gradle clean
@@ -73,6 +150,7 @@ jobs:
         name: hardware-mentor-apk
         path: app/build/outputs/apk/debug/*.apk
         retention-days: 30
+
 
 
 
