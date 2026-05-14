@@ -24,6 +24,46 @@ jobs:
       with:
         gradle-version: 7.5
     
+    - name: Fix missing Android resources
+      run: |
+        echo "=== Before fix ==="
+        cat app/src/main/AndroidManifest.xml
+        
+        # 1. 修复 AndroidManifest.xml - 使用系统默认资源
+        sed -i 's|android:icon="@mipmap/ic_launcher"|android:icon="@android:drawable/ic_menu_info_details"|g' app/src/main/AndroidManifest.xml
+        sed -i 's|android:theme="@style/AppTheme"|android:theme="@android:style/Theme.Light.NoActionBar"|g' app/src/main/AndroidManifest.xml
+        
+        # 2. 创建 styles.xml（定义 AppTheme，防止其他地方引用）
+        mkdir -p app/src/main/res/values
+        cat > app/src/main/res/values/styles.xml << 'EOF'
+        <?xml version="1.0" encoding="utf-8"?>
+        <resources>
+            <style name="AppTheme" parent="android:style/Theme.Light.NoActionBar">
+            </style>
+        </resources>
+        EOF
+        
+        # 3. 创建占位图标
+        mkdir -p app/src/main/res/drawable
+        cat > app/src/main/res/drawable/ic_launcher.xml << 'EOF'
+        <?xml version="1.0" encoding="utf-8"?>
+        <vector xmlns:android="http://schemas.android.com/apk/res/android"
+            android:width="48dp"
+            android:height="48dp"
+            android:viewportWidth="24"
+            android:viewportHeight="24">
+            <path
+                android:fillColor="#1976D2"
+                android:pathData="M12,2C6.48,2 2,6.48 2,12s4.48,10 10,10 10,-4.48 10,-10S17.52,2 12,2zM13,17h-2v-6h2v6zM13,9h-2V7h2v2z"/>
+        </vector>
+        EOF
+        
+        echo "=== After fix ==="
+        cat app/src/main/AndroidManifest.xml
+    
+    - name: Clean build
+      run: gradle clean
+    
     - name: Build Debug APK with Gradle
       run: gradle assembleDebug
     
@@ -33,5 +73,6 @@ jobs:
         name: hardware-mentor-apk
         path: app/build/outputs/apk/debug/*.apk
         retention-days: 30
+
 
 
