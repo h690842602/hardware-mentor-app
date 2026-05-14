@@ -8,149 +8,68 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-    
+
     - name: Set up JDK 17
       uses: actions/setup-java@v4
       with:
         java-version: '17'
         distribution: 'temurin'
-    
+
     - name: Setup Gradle
       uses: gradle/actions/setup-gradle@v3
       with:
         gradle-version: 7.5
-    
+
     - name: Fix Android project files
       run: |
         echo "=== 开始一次性修复所有问题 ==="
-        
-        # ============================================
+
         # 1. 修复 AndroidManifest.xml
-        # ============================================
-        # 替换 theme 为本地定义的 AppTheme
         sed -i 's|android:theme="[^"]*"|android:theme="@style/AppTheme"|g' app/src/main/AndroidManifest.xml
-        # 替换 mipmap 图标为 drawable 图标
         sed -i 's|android:icon="@mipmap/ic_launcher"|android:icon="@drawable/ic_launcher"|g' app/src/main/AndroidManifest.xml
         echo "[OK] AndroidManifest.xml 已修复"
-        
-        # ============================================
-        # 2. 创建 styles.xml（使用原生 android:Theme，不依赖 AppCompat）
-        # ============================================
+
+        # 2. 创建 styles.xml（base64 解码，避免 YAML heredoc 缩进问题）
         mkdir -p app/src/main/res/values
-        cat > app/src/main/res/values/styles.xml << 'EOF'
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <style name="AppTheme" parent="android:Theme">
-    </style>
-</resources>
-EOF
+        echo 'PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz4KPHJlc291cmNlcz4KICAgIDxzdHlsZSBuYW1lPSJBcHBUaGVtZSIgcGFyZW50PSJhbmRyb2lkOlRoZW1lIj4KICAgIDwvc3R5bGU+CjwvcmVzb3VyY2VzPg==' | base64 -d > app/src/main/res/values/styles.xml
         echo "[OK] styles.xml 已创建"
-        
-        # ============================================
-        # 3. 创建应用图标（drawable 矢量图标）
-        # ============================================
+
+        # 3. 创建 drawable 矢量图标
         mkdir -p app/src/main/res/drawable
-        cat > app/src/main/res/drawable/ic_launcher.xml << 'EOF'
-<?xml version="1.0" encoding="utf-8"?>
-<vector xmlns:android="http://schemas.android.com/apk/res/android"
-    android:width="48dp"
-    android:height="48dp"
-    android:viewportWidth="24"
-    android:viewportHeight="24">
-    <path
-        android:fillColor="#1976D2"
-        android:pathData="M12,2C6.48,2 2,6.48 2,12s4.48,10 10,10 10,-4.48 10,-10S17.52,2 12,2zM13,17h-2v-6h2v6zM13,9h-2V7h2v2z"/>
-</vector>
-EOF
+        echo 'PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz4KPHZlY3RvciB4bWxuczphbmRyb2lkPSJodHRwOi8vc2NoZW1hcy5hbmRyb2lkLmNvbS9hcGsvcmVzL2FuZHJvaWQiCiAgICBhbmRyb2lkOndpZHRoPSI0OGRwIgogICAgYW5kcm9pZDpoZWlnaHQ9IjQ4ZHAiCiAgICBhbmRyb2lkOnZpZXdwb3J0V2lkdGg9IjI0IgogICAgYW5kcm9pZDp2aWV3cG9ydEhlaWdodD0iMjQiPgogICAgPHBhdGgKICAgICAgICBhbmRyb2lkOmZpbGxDb2xvcj0iIzE5NzZEMiIKICAgICAgICBhbmRyb2lkOnBhdGhEYXRhPSJNMTIsMkM2LjQ4LDIgMiw2LjQ4IDIsMTJzNC40OCwxMCAxMCwxMCAxMCwtNC40OCAxMCwtMTBTMTcuNTIsMiAxMiwyek0xMywxN2gtMnYtNmgydjZ6TTEzLDloLTJWN2gydjJ6Ii8+CjwvdmVjdG9yPg==' | base64 -d > app/src/main/res/drawable/ic_launcher.xml
         echo "[OK] ic_launcher.xml 已创建"
-        
-        # ============================================
+
         # 4. 创建布局文件 activity_main.xml
-        # ============================================
         mkdir -p app/src/main/res/layout
-        cat > app/src/main/res/layout/activity_main.xml << 'EOF'
-<?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent">
-    <WebView
-        android:id="@+id/webview"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent" />
-</FrameLayout>
-EOF
+        echo 'PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz4KPEZyYW1lTGF5b3V0IHhtbG5zOmFuZHJvaWQ9Imh0dHA6Ly9zY2hlbWFzLmFuZHJvaWQuY29tL2Fway9yZXMvYW5kcm9pZCIKICAgIGFuZHJvaWQ6bGF5b3V0X3dpZHRoPSJtYXRjaF9wYXJlbnQiCiAgICBhbmRyb2lkOmxheW91dF9oZWlnaHQ9Im1hdGNoX3BhcmVudCI+CiAgICA8V2ViVmlldwogICAgICAgIGFuZHJvaWQ6aWQ9IkAraWQvd2VidmlldyIKICAgICAgICBhbmRyb2lkOmxheW91dF93aWR0aD0ibWF0Y2hfcGFyZW50IgogICAgICAgIGFuZHJvaWQ6bGF5b3V0X2hlaWdodD0ibWF0Y2hfcGFyZW50IiAvPgo8L0ZyYW1lTGF5b3V0Pg==' | base64 -d > app/src/main/res/layout/activity_main.xml
         echo "[OK] activity_main.xml 已创建"
-        
-        # ============================================
-        # 5. 重写 MainActivity.java（核心修复）
-        #    改用原生 android.app.Activity，彻底摆脱 AppCompat 依赖
-        # ============================================
+
+        # 5. 重写 MainActivity.java（核心修复：改用原生 Activity，摆脱 AppCompat 依赖）
         mkdir -p app/src/main/java/com/hardware/mentor
-        cat > app/src/main/java/com/hardware/mentor/MainActivity.java << 'EOF'
-package com.hardware.mentor;
-
-import android.app.Activity;
-import android.os.Bundle;
-import android.webkit.WebSettings;
-import android.webkit.WebView;
-import android.webkit.WebViewClient;
-
-public class MainActivity extends Activity {
-    private WebView webView;
-    
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-        
-        webView = (WebView) findViewById(R.id.webview);
-        WebSettings webSettings = webView.getSettings();
-        webSettings.setJavaScriptEnabled(true);
-        webSettings.setDomStorageEnabled(true);
-        webSettings.setAllowFileAccess(true);
-        webSettings.setAllowContentAccess(true);
-        
-        webView.setWebViewClient(new WebViewClient());
-        webView.loadUrl("file:///android_asset/hardware-mentor-complete.html");
-    }
-    
-    @Override
-    public void onBackPressed() {
-        if (webView.canGoBack()) {
-            webView.goBack();
-        } else {
-            super.onBackPressed();
-        }
-    }
-}
-EOF
+        echo 'cGFja2FnZSBjb20uaGFyZHdhcmUubWVudG9yOwoKaW1wb3J0IGFuZHJvaWQuYXBwLkFjdGl2aXR5OwppbXBvcnQgYW5kcm9pZC5vcy5CdW5kbGU7CmltcG9ydCBhbmRyb2lkLndlYmtpdC5XZWJTZXR0aW5nczsKaW1wb3J0IGFuZHJvaWQud2Via2l0LldlYlZpZXc7CmltcG9ydCBhbmRyb2lkLndlYmtpdC5XZWJWaWV3Q2xpZW50OwoKcHVibGljIGNsYXNzIE1haW5BY3Rpdml0eSBleHRlbmRzIEFjdGl2aXR5IHsKICAgIHByaXZhdGUgV2ViVmlldyB3ZWJWaWV3OwogICAgCiAgICBAT3ZlcnJpZGUKICAgIHByb3RlY3RlZCB2b2lkIG9uQ3JlYXRlKEJ1bmRsZSBzYXZlZEluc3RhbmNlU3RhdGUpIHsKICAgICAgICBzdXBlci5vbkNyZWF0ZShzYXZlZEluc3RhbmNlU3RhdGUpOwogICAgICAgIHNldENvbnRlbnRWaWV3KFIubGF5b3V0LmFjdGl2aXR5X21haW4pOwogICAgICAgIAogICAgICAgIHdlYlZpZXcgPSAoV2ViVmlldykgZmluZFZpZXdCeUlkKFIuaWQud2Vidmlldyk7CiAgICAgICAgV2ViU2V0dGluZ3Mgd2ViU2V0dGluZ3MgPSB3ZWJWaWV3LmdldFNldHRpbmdzKCk7CiAgICAgICAgd2ViU2V0dGluZ3Muc2V0SmF2YVNjcmlwdEVuYWJsZWQodHJ1ZSk7CiAgICAgICAgd2ViU2V0dGluZ3Muc2V0RG9tU3RvcmFnZUVuYWJsZWQodHJ1ZSk7CiAgICAgICAgd2ViU2V0dGluZ3Muc2V0QWxsb3dGaWxlQWNjZXNzKHRydWUpOwogICAgICAgIHdlYlNldHRpbmdzLnNldEFsbG93Q29udGVudEFjY2Vzcyh0cnVlKTsKICAgICAgICAKICAgICAgICB3ZWJWaWV3LnNldFdlYlZpZXdDbGllbnQobmV3IFdlYlZpZXdDbGllbnQoKSk7CiAgICAgICAgd2ViVmlldy5sb2FkVXJsKCJmaWxlOi8vL2FuZHJvaWRfYXNzZXQvaGFyZHdhcmUtbWVudG9yLWNvbXBsZXRlLmh0bWwiKTsKICAgIH0KICAgIAogICAgQE92ZXJyaWRlCiAgICBwdWJsaWMgdm9pZCBvbkJhY2tQcmVzc2VkKCkgewogICAgICAgIGlmICh3ZWJWaWV3LmNhbkdvQmFjaygpKSB7CiAgICAgICAgICAgIHdlYlZpZXcuZ29CYWNrKCk7CiAgICAgICAgfSBlbHNlIHsKICAgICAgICAgICAgc3VwZXIub25CYWNrUHJlc3NlZCgpOwogICAgICAgIH0KICAgIH0KfQ==' | base64 -d > app/src/main/java/com/hardware/mentor/MainActivity.java
         echo "[OK] MainActivity.java 已重写（使用原生 Activity）"
-        
+
         echo ""
-        echo "=== 修复完成，最终文件内容 ==="
+        echo "=== 修复后的关键文件 ==="
         echo "--- AndroidManifest.xml ---"
         cat app/src/main/AndroidManifest.xml
         echo ""
         echo "--- MainActivity.java ---"
         cat app/src/main/java/com/hardware/mentor/MainActivity.java
-    
+
     - name: Clean build
       run: gradle clean
-    
+
     - name: Build Debug APK with Gradle
       run: gradle assembleDebug
-    
+
     - name: Upload APK
       uses: actions/upload-artifact@v4
       with:
         name: hardware-mentor-apk
         path: app/build/outputs/apk/debug/*.apk
         retention-days: 30
-
-
-
-
