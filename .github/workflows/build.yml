@@ -1,0 +1,51 @@
+# GitHub Actions 自动编译 Android APK
+
+name: Build Android APK
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  # 允许手动触发
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 检出代码
+      uses: actions/checkout@v4
+    
+    - name: 设置JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+    
+    - name: 设置Android SDK
+      uses: android-actions/setup-android@v3
+    
+    - name: 授权gradlew执行权限
+      run: chmod +x ./gradlew
+    
+    - name: 编译Debug APK
+      run: ./gradlew assembleDebug
+    
+    - name: 编译Release APK
+      run: ./gradlew assembleRelease
+    
+    - name: 上传Debug APK
+      uses: actions/upload-artifact@v4
+      with:
+        name: hardware-mentor-debug-apk
+        path: app/build/outputs/apk/debug/*.apk
+        retention-days: 30
+    
+    - name: 上传Release APK
+      uses: actions/upload-artifact@v4
+      with:
+        name: hardware-mentor-release-apk
+        path: app/build/outputs/apk/release/*.apk
+        retention-days: 30

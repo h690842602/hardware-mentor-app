@@ -1,0 +1,79 @@
+# Gradle files
+.gradle/
+build/
+*/build/
+
+# Local configuration file (sdk path, etc)
+local.properties
+
+# Log/History files
+*.log
+*.hprof
+
+# Android Studio generated files
+*.iml
+.idea/
+*.dav
+*.ids
+*.mbw
+*.nbc
+*.ncl
+*.nms
+*.sms
+*.ter
+*.ufd
+*.ujc
+*.umc
+*.uim
+*.ush
+*.utd
+*.uts
+*.utv
+*.utx
+*.uvr
+*.uvt
+*.uwk
+*.uwp
+*.ut2
+
+# Eclipse project files
+.classpath
+.project
+
+# iOS
+*.pbxuser
+*.mode1v3
+*.mode2v3
+*.perspectivev3
+xcuserdata
+*.xccheckout
+*.moved-aside
+DerivedData
+*.hmap
+*.ipa
+*.xcuserstate
+
+# OS X
+.DS_Store
+
+# Gradle Wrapper
+!gradle/wrapper/gradle-wrapper.jar
+!gradle/wrapper/gradle-wrapper.properties
+
+# JVM
+*.class
+
+# Android
+*.apk
+*.ap_
+*.dex
+
+# Obey
+.obey/
+
+# Mac
+*.swp
+*~
+._*
+.Spotlight-V100
+.Trashes
